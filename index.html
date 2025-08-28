@@ -1,42 +1,103 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>每日盧恩占卜</title>
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;background:#111;color:#fff;}
+.wrap{max-width:920px;margin:0 auto;padding:18px;}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px;}
+h1{font-size:18px;margin:0;}
+button{background:rgba(255,255,255,0.06);border:0;padding:8px 12px;border-radius:10px;color:#fff;cursor:pointer;font-weight:600;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;}
+.card{border-radius:12px;min-height:180px;padding:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:rgba(255,255,255,0.03);position:relative;overflow:hidden;color:#fff;}
+.card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.45));pointer-events:none;}
+.card .rune{font-size:60px;margin:6px 0 4px 0;}
+.card .title{font-weight:700;}
+.card .kw{font-style:italic;color:#bdbdbd;margin-top:6px;}
+.card .desc{margin-top:8px;color:#eee;line-height:1.45;font-size:14px;padding:0 6px;}
+.small{font-size:13px;color:#bdbdbd;text-align:center;margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>每日盧恩占卜</h1>
+<div class="controls">
+<button id="dailyBtn">今日運勢</button>
+<button id="randomBtn">隨機抽一張</button>
+<button id="askBtn">問問題</button>
+</div>
+</header>
+<main id="grid" class="grid" aria-live="polite"></main>
+<div id="info" class="small"></div>
+<div style="height:20px;"></div>
+</div>
+
 <script>
+// Elder Futhark 24符文
 const RUNES = [
   {sym:'ᚠ',name:'Fehu',sound:'F',keywords:'財富',desc:'物質與能量的流入。'},
   {sym:'ᚢ',name:'Uruz',sound:'U',keywords:'力量',desc:'原始力量與勇氣。'},
-  // ... 其他符文
+  {sym:'ᚦ',name:'Thurisaz',sound:'Th',keywords:'守護',desc:'警惕與防衛。'},
+  {sym:'ᚨ',name:'Ansuz',sound:'A',keywords:'智慧',desc:'信息與溝通。'},
+  {sym:'ᚱ',name:'Raidho',sound:'R',keywords:'旅程',desc:'行動與秩序。'},
+  {sym:'ᚲ',name:'Kaunan',sound:'K',keywords:'洞察',desc:'光明與技巧。'},
+  {sym:'ᚷ',name:'Gebo',sound:'G',keywords:'給予',desc:'互惠與禮物。'},
+  {sym:'ᚹ',name:'Wunjo',sound:'W',keywords:'喜悅',desc:'內在喜悅與團隊和諧。'},
+  {sym:'ᚺ',name:'Hagalaz',sound:'H',keywords:'破壞',desc:'突變帶來重整機會。'},
+  {sym:'ᚾ',name:'Nauthiz',sound:'N',keywords:'限制',desc:'被限制時保持耐心。'},
+  {sym:'ᛁ',name:'Isa',sound:'I',keywords:'停滯',desc:'暫停、等待時機。'},
+  {sym:'ᛃ',name:'Jera',sound:'J',keywords:'收成',desc:'時機成熟的收穫。'},
+  {sym:'ᛇ',name:'Eihwaz',sound:'Ei',keywords:'韌性',desc:'守護與轉化。'},
+  {sym:'ᛈ',name:'Perthro',sound:'P',keywords:'機運',desc:'未知容器與秘密。'},
+  {sym:'ᛉ',name:'Algiz',sound:'Z',keywords:'保護',desc:'靈性保護與直覺警示。'},
+  {sym:'ᛋ',name:'Sowilo',sound:'S',keywords:'太陽',desc:'光明、成功。'},
+  {sym:'ᛏ',name:'Tiwaz',sound:'T',keywords:'正義',desc:'公平與勇敢行為。'},
+  {sym:'ᛒ',name:'Berkano',sound:'B',keywords:'成長',desc:'療癒與新生能量。'},
+  {sym:'ᛖ',name:'Ehwaz',sound:'E',keywords:'夥伴',desc:'可靠夥伴與流動關係。'},
+  {sym:'ᛗ',name:'Mannaz',sound:'M',keywords:'自我',desc:'自我與群體互動。'},
+  {sym:'ᛚ',name:'Laguz',sound:'L',keywords:'水',desc:'情感流動與直覺導航。'},
+  {sym:'ᛜ',name:'Ingwaz',sound:'Ng',keywords:'孕育',desc:'內在孕育與行動準備。'},
+  {sym:'ᛞ',name:'Dagaz',sound:'D',keywords:'黎明',desc:'黑暗到光明的門檻。'},
+  {sym:'ᛟ',name:'Othala',sound:'O',keywords:'根基',desc:'家園與傳承。'}
 ];
 
+// 背景圖片
 const BG_LIST = [
   'assets/bg/img_0058.jpeg',
   'assets/bg/img_0059.jpeg',
   'assets/bg/img_0060.jpeg',
-  'assets/bg/img_0061.jpeg'
+  'assets/bg/img/img_0061.jpeg'
 ];
 
-function pickRune(seed, count=1){
-  const res = [];
+// 隨機函數
+function pickRune(seed,count=1){
+  const res=[];
   for(let i=0;i<count;i++){
-    const idx = Math.floor(Math.random()*RUNES.length);
+    const idx=Math.floor(Math.random()*RUNES.length);
     res.push(RUNES[idx]);
   }
   return res;
 }
 
 function randomBg(){
-  const idx = Math.floor(Math.random()*BG_LIST.length);
+  const idx=Math.floor(Math.random()*BG_LIST.length);
   return BG_LIST[idx];
 }
 
 function renderRune(runes){
-  const grid = document.getElementById('grid');
-  grid.innerHTML = '';
-  const bg = randomBg();
-  runes.forEach((r,i)=>{
-    const div = document.createElement('div');
-    div.className = 'card';
-    div.style.backgroundImage = `url('${bg}')`;
-    div.style.backgroundSize = 'cover';
-    div.style.backgroundPosition = 'center';
-    div.innerHTML = `
+  const grid=document.getElementById('grid');
+  grid.innerHTML='';
+  const bg=randomBg();
+  runes.forEach((r)=>{
+    const div=document.createElement('div');
+    div.className='card';
+    div.style.backgroundImage=`url('${bg}')`;
+    div.style.backgroundSize='cover';
+    div.style.backgroundPosition='center';
+    div.innerHTML=`
       <div class="title">${r.name}（${r.sound}）</div>
       <div class="rune">${r.sym}</div>
       <div class="kw">${r.keywords}</div>
@@ -46,22 +107,19 @@ function renderRune(runes){
   });
 }
 
-// 今日運勢
-document.getElementById('dailyBtn').addEventListener('click',()=>{
-  renderRune(pickRune('daily',1));
-});
-
-// 隨機一張
-document.getElementById('randomBtn').addEventListener('click',()=>{
-  renderRune(pickRune('random',1));
-});
-
-// 問問題
+// 按鈕事件
+document.getElementById('dailyBtn').addEventListener('click',()=>{renderRune(pickRune('daily',1));});
+document.getElementById('randomBtn').addEventListener('click',()=>{renderRune(pickRune('random',1));});
 document.getElementById('askBtn').addEventListener('click',()=>{
-  const question = prompt('請輸入問題');
+  const question=prompt('請輸入問題');
   if(!question) return;
-  const count = prompt('抽幾張？輸入1或3', '1');
-  const num = (count==='3')?3:1;
+  const count=prompt('抽幾張？輸入1或3','1');
+  const num=(count==='3')?3:1;
   renderRune(pickRune(question,num));
 });
+
+// 頁面載入自動顯示今日運勢
+renderRune(pickRune('daily',1));
 </script>
+</body>
+</html>
